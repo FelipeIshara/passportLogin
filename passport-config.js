@@ -1,28 +1,27 @@
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy;
-function initializePassport(user){
-    console.log(array)
-    const users = array
-    function verifyCallback(username, password, done) {
-        console.log(array)
-        user = username
-        console.log(user)
-        /*User.findOne({ username: username }, function (err, user) {
-          if (err) { return done(err); }
-          if (!user) {
-            return done(null, false, { message: 'Incorrect username.' });
-          }
-          if (!user.validPassword(password)) {
-            return done(null, false, { message: 'Incorrect password.' });
-          }
-          return done(null, user);
-        });
-      }*/
-      
+const User = require('./models/user')
+const bcrypt = require('bcrypt')
+function initializePassport(){
+  async function verifyCallback(username, password, done) {
+      console.log(username + password)
+      user = await User.findOne({ username: username })
+      console.log(user)
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      if (await bcrypt.compare(password, user.password)) {
+        console.log("ok")
+        return done(null, user)
+      } else {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+  }
+  passport.use(new LocalStrategy(verifyCallback));
+  passport.serializeUser((user,done) => done(null, user.id)) 
+  passport.deserializeUser((userId, done)=> done(null, user))
 }
-verifyCallback();
-passport.use(new LocalStrategy(verifyCallback));
-}
+
 
 
 module.exports = initializePassport;
